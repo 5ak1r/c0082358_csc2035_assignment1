@@ -2,6 +2,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.util.Scanner;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 
 public class Client {
 	DatagramSocket socket;
@@ -135,9 +137,12 @@ public class Client {
 	/* TODO: send metadata (file size and file name to create) to the server 
 	 * outputFile: is the name of the file that the server will create
 	*/
-	public void sendMetaData(int portNumber, InetAddress IPAddress, File file, String outputFile) {
+	public void sendMetaData(int portNumber, InetAddress IPAddress, File file, String outputFile) throws IOException {
 
-		metadata = new MetaData(file.getName(), file.size());
+		MetaData metadata = new MetaData();
+		
+		metadata.setName(file.getName());
+		metadata.setSize((int) file.getTotalSpace());
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		ObjectOutputStream objectStream = new ObjectOutputStream(outputStream);
