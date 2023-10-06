@@ -69,7 +69,7 @@ public class Server {
 		}
 		totalBytes = metaData.getSize();
 		outputFileName = metaData.getName();
-		System.out.println("SERVER: Meta info are received successfully: (file name, size): ( "+ metaData.getName()+", " + metaData.getSize()+")");
+		System.out.println("SERVER: Meta info are received successfully: (file name, size): ("+ metaData.getName()+", " + metaData.getSize()+")");
 
 	}
 

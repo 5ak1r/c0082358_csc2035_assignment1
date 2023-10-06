@@ -150,6 +150,8 @@ public class Client {
 		
 		byte[] data = outputStream.toByteArray();
 		DatagramPacket sendMeta = new DatagramPacket(data, data.length, IPAddress, portNumber);
+		
+		socket = new DatagramSocket();
 		socket.send(sendMeta);
 
 		//exitErr("sendMetaData is not implemented");
