@@ -142,7 +142,7 @@ public class Client {
 		MetaData metadata = new MetaData();
 		
 		metadata.setName(file.getName());
-		metadata.setSize((int) file.getTotalSpace());
+		metadata.setSize((int) file.length());
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		ObjectOutputStream objectStream = new ObjectOutputStream(outputStream);
@@ -150,10 +150,11 @@ public class Client {
 		
 		byte[] data = outputStream.toByteArray();
 		DatagramPacket sendMeta = new DatagramPacket(data, data.length, IPAddress, portNumber);
-		
+
 		socket = new DatagramSocket();
 		socket.send(sendMeta);
 
+		System.out.println("SERVER: meta data is sent (file name, size): ("+ outputFile +", "+ file.length()+")");
 		//exitErr("sendMetaData is not implemented");
 	}
 
