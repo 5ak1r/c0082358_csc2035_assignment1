@@ -138,7 +138,7 @@ public class Client {
 	 * outputFile: is the name of the file that the server will create
 	*/
 	public void sendMetaData(int portNumber, InetAddress IPAddress, File file, String outputFile) throws IOException {
-
+		socket = new DatagramSocket();
 		MetaData metadata = new MetaData();
 		
 		metadata.setName(outputFile);
@@ -151,7 +151,6 @@ public class Client {
 		byte[] data = outputStream.toByteArray();
 		DatagramPacket sendMeta = new DatagramPacket(data, data.length, IPAddress, portNumber);
 
-		socket = new DatagramSocket();
 		socket.send(sendMeta);
 
 		System.out.println("SERVER: meta data is sent (file name, size): ("+ outputFile +", "+ file.length()+")");
