@@ -141,7 +141,7 @@ public class Client {
 
 		MetaData metadata = new MetaData();
 		
-		metadata.setName(outputFile.getName());
+		metadata.setName(outputFile);
 		metadata.setSize((int) file.length());
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
