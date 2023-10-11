@@ -1,6 +1,9 @@
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.*;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -152,15 +155,35 @@ public class Client {
 		DatagramPacket sendMeta = new DatagramPacket(data, data.length, IPAddress, portNumber);
 
 		socket.send(sendMeta);
+		socket.close();
 
 		System.out.println("SERVER: meta data is sent (file name, size): ("+ outputFile +", "+ file.length()+")");
-		//exitErr("sendMetaData is not implemented");
 	}
 
 
 	/* TODO: Send the file to the server without corruption*/
-	public void sendFileNormal(int portNumber, InetAddress IPAddress, File file) {
-		exitErr("sendFileNormal is not implemented");
+	public void sendFileNormal(int portNumber, InetAddress IPAddress, File file) throws IOException {
+
+		int size = 4;
+		
+		FileInputStream fileInputStream = new FileInputStream(file);
+
+
+		byte[] buffer = new byte[(int) file.length()];
+		fileInputStream.read(buffer);
+		
+		for (int i = 0; i <= (int) file.length(); i += size) {
+			try {
+				for (int j = 0; j < 4; i++) {
+
+				}
+			} catch (Exception ArrayIndexOutOfBoundsException) {
+			}
+
+		}
+
+		
+
 	} 
 
 	/* TODO: This function is essentially the same as the sendFileNormal function
