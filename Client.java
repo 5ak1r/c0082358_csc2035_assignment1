@@ -170,32 +170,46 @@ public class Client {
 
 		int size = 4;
 		int sq = 1;
+		int totalPackets = 0;
 		FileInputStream fileInputStream = new FileInputStream(file);
+		String data = "";
 
 
 		byte[] buffer = new byte[(int) file.length()];
 		fileInputStream.read(buffer);
-		
-		for (int i = 0; i < (int) file.length(); i += size) {
 
+		for (int i = 0; i < (int) file.length(); i += size) {
+			int count = 0;
 			byte[] tempBuffer = new byte[size];
 
-			try {
-				for (int j = 0; j < size; j++) {
+			for (int j = 0; j < size; j++) {
+				try {
 					tempBuffer[j] = buffer[i + j];
+				} catch (Exception ArrayIndexOutOfBoundsException) {
+					/*Ignores the case when the amount of remaining bytes is less than the size of the packet, and continues to send the rest as a smaller packet. */
+					count += 1;
 				}
-			} catch (Exception ArrayIndexOutOfBoundsException) {
-				/*Ignores the case when the amount of remaining bytes is less than the size of the packet, and continues to send the rest as a smaller packet. */
 			}
 			
+			if (count != 0) {
+				byte[] lastBuffer = new byte[size-count];
+				
+				for (int k = 0; k < size-count; k++){
+					lastBuffer[k] = tempBuffer[k];
+				}
+				
+				data = new String(lastBuffer);
+			} else {
+				data = new String(tempBuffer);
+			}
+
 			sq = (sq + 1) % 2;
 
 			socket = new DatagramSocket();
 			Segment segment = new Segment();
-			String data = new String(tempBuffer);
 
 			segment.setPayLoad(data);
-			segment.setSize(size);
+			segment.setSize(data.length());
 			segment.setChecksum(checksum(data, false));
 			segment.setSq(sq);
 			segment.setType(SegmentType.Data);
@@ -208,6 +222,7 @@ public class Client {
 			DatagramPacket sendSegment = new DatagramPacket(sendData, sendData.length, IPAddress, portNumber);
 
 			System.out.println(String.format("SENDER: Sending segment: sq:%d, size:%d, checksum:%d, content:(%s)", segment.getSq(), segment.getSize(), segment.getChecksum(), segment.getPayLoad()));
+			totalPackets += 1;
 			socket.send(sendSegment);
 
 			
@@ -236,6 +251,7 @@ public class Client {
 			System.out.println("----------------------------------------");
 			socket.close();
 		
+		System.out.println(String.format("total segments %d", totalPackets));
 		fileInputStream.close();
 		}
 
