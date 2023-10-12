@@ -1,10 +1,14 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 
@@ -172,13 +176,13 @@ public class Client {
 		byte[] buffer = new byte[(int) file.length()];
 		fileInputStream.read(buffer);
 		
-		for (int i = 0; i <= (int) file.length(); i += size) {
+		for (int i = 0; i < (int) file.length(); i += size) {
 
 			byte[] tempBuffer = new byte[size];
 
 			try {
-				for (int j = 0; j < 4; i++) {
-					tempBuffer[j] = buffer[i*size + j];
+				for (int j = 0; j < size; j++) {
+					tempBuffer[j] = buffer[i + j];
 				}
 			} catch (Exception ArrayIndexOutOfBoundsException) {
 				/*Ignores the case when the amount of remaining bytes is less than the size of the packet, and continues to send the rest as a smaller packet. */
@@ -212,8 +216,24 @@ public class Client {
 			byte[] ACKBuffer = new byte[256];
 			DatagramPacket receiveACK = new DatagramPacket(ACKBuffer, ACKBuffer.length);
 			socket.receive(receiveACK);
-			String received = new String(receiveACK.getData()).trim();
-			System.out.println(String.format("SENDER: ACK sq=%s RECEIVED.", received));
+			
+			Segment seg = new Segment();
+
+			byte[] receiveData = receiveACK.getData();
+			ByteArrayInputStream in = new ByteArrayInputStream(receiveData);
+			ObjectInputStream is = new ObjectInputStream(in);
+			try {
+				seg = (Segment) is.readObject();  
+
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+
+			int ack = seg.getSq();
+			
+
+			System.out.println(String.format("SENDER: ACK sq=%d RECEIVED.", ack));
+			System.out.println("----------------------------------------");
 			socket.close();
 		
 		fileInputStream.close();
