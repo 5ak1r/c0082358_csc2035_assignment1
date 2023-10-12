@@ -165,7 +165,7 @@ public class Client {
 	public void sendFileNormal(int portNumber, InetAddress IPAddress, File file) throws IOException {
 
 		int size = 4;
-		
+		int sq = 1;
 		FileInputStream fileInputStream = new FileInputStream(file);
 
 
@@ -173,13 +173,50 @@ public class Client {
 		fileInputStream.read(buffer);
 		
 		for (int i = 0; i <= (int) file.length(); i += size) {
+
+			byte[] tempBuffer = new byte[size];
+
 			try {
 				for (int j = 0; j < 4; i++) {
-
+					tempBuffer[j] = buffer[i*size + j];
 				}
 			} catch (Exception ArrayIndexOutOfBoundsException) {
+				/*Ignores the case when the amount of remaining bytes is less than the size of the packet, and continues to send the rest as a smaller packet. */
 			}
+			
+			sq = (sq + 1) % 2;
 
+			socket = new DatagramSocket();
+			Segment segment = new Segment();
+			String data = new String(tempBuffer);
+
+			segment.setPayLoad(data);
+			segment.setSize(size);
+			segment.setChecksum(checksum(data, false));
+			segment.setSq(sq);
+			segment.setType(SegmentType.Data);
+
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			ObjectOutputStream objectStream = new ObjectOutputStream(outputStream);
+			objectStream.writeObject(segment);
+			
+			byte[] sendData = outputStream.toByteArray();
+			DatagramPacket sendSegment = new DatagramPacket(sendData, sendData.length, IPAddress, portNumber);
+
+			System.out.println(String.format("SENDER: Sending segment: sq:%d, size:%d, checksum:%d, content:(%s)", segment.getSq(), segment.getSize(), segment.getChecksum(), segment.getPayLoad()));
+			socket.send(sendSegment);
+
+			
+
+			System.out.println("SENDER: Waiting for an ACK");
+			byte[] ACKBuffer = new byte[256];
+			DatagramPacket receiveACK = new DatagramPacket(ACKBuffer, ACKBuffer.length);
+			socket.receive(receiveACK);
+			String received = new String(receiveACK.getData()).trim();
+			System.out.println(String.format("SENDER: ACK sq=%s RECEIVED.", received));
+			socket.close();
+		
+		fileInputStream.close();
 		}
 
 		
