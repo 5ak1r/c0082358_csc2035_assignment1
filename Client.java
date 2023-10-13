@@ -262,9 +262,113 @@ public class Client {
 	/* TODO: This function is essentially the same as the sendFileNormal function
 	 *      except that it resends data segments if no ACK for a segment is 
 	 *      received from the server.*/
-	public void sendFileWithTimeOut(int portNumber, InetAddress IPAddress, File file, float loss) {
-		exitErr("sendFileWithTimeOut is not implemented");
-	} 
+	public void sendFileWithTimeOut(int portNumber, InetAddress IPAddress, File file, float loss) throws IOException {
+		int size = 4;
+		int sq = 1;
+		int totalPackets = 0;
+		FileInputStream fileInputStream = new FileInputStream(file);
+		String data = "";
+		int retry = 0;
 
+		byte[] buffer = new byte[(int) file.length()];
+		fileInputStream.read(buffer);
 
+		for (int i = 0; i < (int) file.length(); i += size) {
+			int count = 0;
+			byte[] tempBuffer = new byte[size];
+
+			for (int j = 0; j < size; j++) {
+				try {
+					tempBuffer[j] = buffer[i + j];
+				} catch (Exception ArrayIndexOutOfBoundsException) {
+					/*Ignores the case when the amount of remaining bytes is less than the size of the packet, and continues to send the rest as a smaller packet. */
+					count += 1;
+				}
+			}
+			
+			if (count != 0) {
+				byte[] lastBuffer = new byte[size-count];
+				
+				for (int k = 0; k < size-count; k++){
+					lastBuffer[k] = tempBuffer[k];
+				}
+				
+				data = new String(lastBuffer);
+			} else {
+				data = new String(tempBuffer);
+			}
+
+			sq = (sq + 1) % 2;
+
+			socket = new DatagramSocket();
+			Segment segment = new Segment();
+
+			segment.setPayLoad(data);
+			segment.setSize(data.length());
+			segment.setChecksum(checksum(data, isCorrupted(loss)));
+			segment.setSq(sq);
+			segment.setType(SegmentType.Data);
+
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			ObjectOutputStream objectStream = new ObjectOutputStream(outputStream);
+			objectStream.writeObject(segment);
+			
+			byte[] sendData = outputStream.toByteArray();
+			DatagramPacket sendSegment = new DatagramPacket(sendData, sendData.length, IPAddress, portNumber);
+
+			System.out.println(String.format("SENDER: Sending segment: sq:%d, size:%d, checksum:%d, content:(%s)", segment.getSq(), segment.getSize(), segment.getChecksum(), segment.getPayLoad()));
+			totalPackets += 1;
+			socket.send(sendSegment);
+
+			
+			socket.setSoTimeout(100);
+			System.out.println("SENDER: Waiting for an ACK");
+			
+
+			while (true) {
+				try {
+					byte[] ACKBuffer = new byte[256];
+					DatagramPacket receiveACK = new DatagramPacket(ACKBuffer, ACKBuffer.length);
+					socket.receive(receiveACK);
+					
+					Segment seg = new Segment();
+
+					byte[] receiveData = receiveACK.getData();
+					ByteArrayInputStream in = new ByteArrayInputStream(receiveData);
+					ObjectInputStream is = new ObjectInputStream(in);
+					try {
+						seg = (Segment) is.readObject();  
+						
+						int ack = seg.getSq();
+					
+
+						System.out.println(String.format("SENDER: ACK sq=%d RECEIVED.", ack));
+						System.out.println("----------------------------------------");
+						retry = 0;
+						break;
+
+					} catch (ClassNotFoundException e) {
+						e.printStackTrace();
+					}
+
+				} catch (Exception SocketTimeoutException) {
+					System.out.println("SENDER: ACK not received: TIMEOUT. RESENDING");
+					System.out.println("----------------------------------------");
+					i-= size;
+					retry++;
+
+					if(retry > RETRY_LIMIT) {
+						System.out.println("SENDER: TIMEOUTS EXCEED LIMIT. TERMINATING.");
+						System.exit(0);
+					}
+
+					break;
+				}
+			}
+			socket.close();
+		
+		} 
+	System.out.println(String.format("total segments %d", totalPackets));
+	fileInputStream.close();
+	}
 }
