@@ -169,7 +169,7 @@ public class Client {
 	public void sendFileNormal(int portNumber, InetAddress IPAddress, File file) throws IOException {
 
 		int size = 4;
-		int sq = 1;
+		int sq = 0;
 		int totalPackets = 0;
 		FileInputStream fileInputStream = new FileInputStream(file);
 		String data = "";
@@ -203,8 +203,6 @@ public class Client {
 				data = new String(tempBuffer);
 			}
 
-			sq = (sq + 1) % 2;
-
 			socket = new DatagramSocket();
 			Segment segment = new Segment();
 
@@ -224,6 +222,7 @@ public class Client {
 			System.out.println(String.format("SENDER: Sending segment: sq:%d, size:%d, checksum:%d, content:(%s)", segment.getSq(), segment.getSize(), segment.getChecksum(), segment.getPayLoad()));
 			totalPackets += 1;
 			socket.send(sendSegment);
+			sq = (sq + 1) % 2;
 
 			
 
@@ -264,7 +263,7 @@ public class Client {
 	 *      received from the server.*/
 	public void sendFileWithTimeOut(int portNumber, InetAddress IPAddress, File file, float loss) throws IOException {
 		int size = 4;
-		int sq = 1;
+		int sq = 0;
 		int totalPackets = 0;
 		FileInputStream fileInputStream = new FileInputStream(file);
 		String data = "";
@@ -297,8 +296,6 @@ public class Client {
 			} else {
 				data = new String(tempBuffer);
 			}
-
-			sq = (sq + 1) % 2;
 
 			socket = new DatagramSocket();
 			Segment segment = new Segment();
@@ -345,6 +342,7 @@ public class Client {
 						System.out.println(String.format("SENDER: ACK sq=%d RECEIVED.", ack));
 						System.out.println("----------------------------------------");
 						retry = 0;
+						sq = (sq + 1) % 2;
 						break;
 
 					} catch (ClassNotFoundException e) {
@@ -365,7 +363,6 @@ public class Client {
 					break;
 				}
 			}
-			socket.close();
 		
 		} 
 	System.out.println(String.format("total segments %d", totalPackets));
