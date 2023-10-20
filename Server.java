@@ -214,6 +214,7 @@ public class Server {
 		byte[] incomingData = new byte[1024];
 		Segment dataSeg = new Segment();
 		int seqCheck = 0;
+		boolean dupe_lost = false;
 
 		/* while still receiving segments */
 		while (currentTotal < totalBytes) {
@@ -256,16 +257,22 @@ public class Server {
 					byte[] dataAck = outputStream.toByteArray();			
 					DatagramPacket replyPacket = new DatagramPacket(dataAck, dataAck.length, IPAddress, port);
 					
-					if (!isLost(loss)) {
+					if (!isLost(loss) && !dupe_lost) {
 						/* Send the Ack segment */
 						socket.send(replyPacket);
+						dupe_lost = false;
 					} else {
 						System.out.println("SENDER: ACK LOSS SIMULATED");
+						dupe_lost = true;
 					}
 
 					/* write the payload of the data segment to output file */
 					myWriter.write(dataSeg.getPayLoad());
-					currentTotal = currentTotal + dataSeg.getSize();
+					currentTotal += dataSeg.getSize();
+
+					if ((currentTotal == totalBytes) && (dupe_lost == true)) {
+						currentTotal -= dataSeg.getSize();
+					}
 
 					seqCheck = (seqCheck + 1) % 2;
 
@@ -285,6 +292,10 @@ public class Server {
 				ackSeg.setSq((seqCheck + 1) % 2);
 				ackSeg.setType(SegmentType.Ack);
 				System.out.println("SERVER: Duplicate file. Sending previous ACK with sq " + ackSeg.getSq());
+				
+				if(currentTotal + dataSeg.getSize() == totalBytes) {
+					currentTotal += dataSeg.getSize();
+				}
 
 				ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 				ObjectOutputStream os = new ObjectOutputStream(outputStream);
