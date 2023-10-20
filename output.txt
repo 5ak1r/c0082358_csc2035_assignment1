@@ -1,1 +1,0 @@
-Sockets are quite a cool module to learn about in both Java and Python!

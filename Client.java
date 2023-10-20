@@ -341,7 +341,7 @@ public class Client {
 
 						System.out.println(String.format("SENDER: ACK sq=%d RECEIVED.", ack));
 						System.out.println("----------------------------------------");
-						retry = 0;
+						retry = 1;
 						sq = (sq + 1) % 2;
 						break;
 
