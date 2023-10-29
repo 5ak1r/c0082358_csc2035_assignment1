@@ -285,7 +285,6 @@ public class Server {
 				ackSeg.setSq((seqCheck + 1) % 2);
 				ackSeg.setType(SegmentType.Ack);
 				System.out.println("SERVER: Duplicate file. Sending previous ACK with sq " + ackSeg.getSq());
-
 				ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 				ObjectOutputStream os = new ObjectOutputStream(outputStream);
 				os.writeObject(ackSeg);			
@@ -294,7 +293,7 @@ public class Server {
 
 				socket.send(replyPacket);
 
-				System.out.println("\t\t>>>>>>> NETWORK: ACK is sent successfully <<<<<<<<<");
+				System.out.println("\t\t>>>>>>> NETWORK: ACK is sent successfully - NOT LOST <<<<<<<<<");
 				System.out.println("------------------------------------------------");
 				System.out.println("------------------------------------------------");
 			}
